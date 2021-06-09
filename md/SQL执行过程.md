@@ -2,7 +2,7 @@
 
 ### 写操作执行过程
 
-//todo 图片
+![执行过程](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/sqlExecutionProcess.png)
 
 ### 相关组件
 
@@ -58,7 +58,7 @@
 
 2. undo log 与 redo log 是存储引擎层的日志，只能在 InnoDB 下使用；而bin log 是 Server 层的日志，可以在任何引擎下使用。
 
-3. redo log 大小有限，超过后会循环写；另外两个大小不会。
+3. redo log 大小有限(4GB)，超过后会循环写；另外两个大小不会。
 
 4. undo log 记录的是行记录变化前的数据；redo log 记录的是 sql 的数据页修改逻辑以及 change buffer 的变更；bin log记录操作语句对具体行的操作以及操作前的整行信息（5.7默认）或者sql语句。
 
