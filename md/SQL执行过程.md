@@ -67,13 +67,5 @@
    
    **MySQL 是 WAL（Write-Ahead Logging）机制，也就是写操作会先存入日志，然后再写入磁盘，这样可以避开高峰，提高数据库的可用性。**
 
-### 索引下推(理解，暂未放图)
-1. Index Key
-	查询语句中用到的索引列放在Index Key中。
-2. Index Filter
-	查询语句中未用到索引列但该列上有存在索引放在Index Filter中。
-3. Table Filter
-	查询语句中没有索引的列放在Table Filter中。
-
 ### SQL执行顺序
 // todo 图
