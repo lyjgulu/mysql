@@ -7,18 +7,21 @@
 - undo log是 Innodb 引擎专属的日志，是记录每行数据事务执行前的数据。主要作用是用于实现 MVCC 版本控制，undo log 保证事务隔离级别的读已提交和读未提交级别，保证了原子性。(幻读问题依靠锁来实现)
 ![undo log抽象表示](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/undo%20log.png)
 
-#### redo log 与 Buffer Pool
+#### redo log 与 Buffer Pool(buffer一块关注 mysql的各种buffer )
 - InnoDB 内部维护了一个缓冲池，用于减少对磁盘数据的直接IO操作，并配合 redo log、内部的 change buffer 来实现异步的落盘，保证程序的高效执行。
-- redo log 是记录修改操作，防止断电丢失写操作，降低随机写消耗（转成顺序写）；Change Buffer 是为了将写操作延迟更新到缓冲池，降低随机读的消耗。（不需要频繁从磁盘读数据页)
+- redo log 是记录修改操作，防止断电丢失写操作，降低随机写磁盘 IO 消耗（转成顺序写）；Change Buffer 是为了将写操作延迟更新到缓冲池，降低随机读磁盘 IO 的消耗。（不需要频繁从磁盘读数据页)
 - innodb_flush_log_at_trx_commit这个参数设置成1的时候，表示每次事务的redo log都直接持久化到磁盘。这个参数设置成1，这样可以保证MySQL异常重启之后数据不丢失。
-- 例子(buffer一块关注 mysql的各种buffer )
+- 例子
     - 执行sql 
     ``` sql
     insert into t(id,k) values(id1,k1),(id2,k2);
     ```
   - 假设当前k索引树的状态，查找到位置后，k1所在的数据页在内存(InnoDB buffer pool)中，k2所在的数据页不在内存中。如图。
+  ![undo log抽象表示](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/redoAndBuffer.png)
+  - 涉及了四个部分：内存、redo log（ib_log_fileX）、 数据表空间（t.ibd）、系统表空间（ibdata1）。
+  - 3，4步是将两个动作记入redo log中
 
-#### bin log(所有引擎都有)
+#### bin log(所有引擎都有，二进制)
 - redo log 因为大小固定，所以不能存储过多的数据，它只能用于未更新的数据落盘，而数据操作的备份恢复、以及主从复制是靠 bin log。（如果数据库误删需要还原，那么需要某个时间点的数据备份以及bin log）
 - 在更新到数据页缓存或者 Change Buffer 后，首先进行 redo log 的编写，编写完成后将 redo log设为prepare状态，随后再进行binlog的编写，等到binlog也编写完成后再将redo log设置为commit状态。这是为了防止数据库宕机导致binlog没有将修改记录写入，后面数据恢复、主从复制时数据不一致。
 - 断电回滚
@@ -40,10 +43,8 @@
 
 4. undo log 记录的是行记录变化前的数据；redo log 记录的是 sql 的数据页修改逻辑以及 change buffer 的变更；bin log记录操作语句对具体行的操作以及操作前的整行信息（5.7默认）或者sql语句。
 
-5. 单独的 binlog 没有 crash-safe 能力，也就是在异常断电后，之前已经提交但未更新的事务操作到磁盘的操作会丢失，也就是主从复制的一致性无法保障，而 redo log 有 crash-safe 能力，通过与 redo log 的配合实现 "三步提交"，就可以让主从库的数据也能保证一致性。(**crash-safe能力是保证即使数据库发生异常重启，之前提交的记录都不会丢失**)
+5. 单独的 binlog 没有 crash-safe 能力，也就是在异常断电后，之前已经提交但未更新的事务操作到磁盘的操作会丢失，也就是主从复制的一致性无法保障，而 redo log 有 crash-safe 能力，通过与 redo log 的配合实现 "步提交"，就可以让主从库的数据也能保证一致性。(**crash-safe能力是保证即使数据库发生异常重启，之前提交的记录都不会丢失**)
 
 6. redo log 是物理日志，它记录的是数据页修改逻辑以及 change buffer 的变更，只能在当前存储引擎下使用，而 binlog 是逻辑日志，它记录的是操作语句涉及的每一行修改前后的值，在任何存储引擎下都可以使用。
 
-### redo log
-- (09讲)
--（15讲）
+#### 日志刷盘(fsync)
