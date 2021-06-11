@@ -2,13 +2,21 @@
 **MySQL 是 WAL（Write-Ahead Logging）机制，也就是写操作会先存入日志，然后再写入磁盘，这样可以避开高峰，提高数据库的可用性。**
 
 ### 三种日志概述
+
 #### undo log 与 MVCC(并发版本控制)
 - undo log是 Innodb 引擎专属的日志，是记录每行数据事务执行前的数据。主要作用是用于实现 MVCC 版本控制，undo log 保证事务隔离级别的读已提交和读未提交级别，保证了原子性。(幻读问题依靠锁来实现)
+![undo log抽象表示](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/undo%20log.png)
 
 #### redo log 与 Buffer Pool
 - InnoDB 内部维护了一个缓冲池，用于减少对磁盘数据的直接IO操作，并配合 redo log、内部的 change buffer 来实现异步的落盘，保证程序的高效执行。
 - redo log 是记录修改操作，防止断电丢失写操作，降低随机写消耗（转成顺序写）；Change Buffer 是为了将写操作延迟更新到缓冲池，降低随机读的消耗。（不需要频繁从磁盘读数据页)
 - innodb_flush_log_at_trx_commit这个参数设置成1的时候，表示每次事务的redo log都直接持久化到磁盘。这个参数设置成1，这样可以保证MySQL异常重启之后数据不丢失。
+- 例子(buffer一块关注 mysql的各种buffer )
+    - 执行sql 
+    ``` sql
+    insert into t(id,k) values(id1,k1),(id2,k2);
+    ```
+  - 假设当前k索引树的状态，查找到位置后，k1所在的数据页在内存(InnoDB buffer pool)中，k2所在的数据页不在内存中。如图。
 
 #### bin log(所有引擎都有)
 - redo log 因为大小固定，所以不能存储过多的数据，它只能用于未更新的数据落盘，而数据操作的备份恢复、以及主从复制是靠 bin log。（如果数据库误删需要还原，那么需要某个时间点的数据备份以及bin log）
