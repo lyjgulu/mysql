@@ -35,7 +35,6 @@
 ### 存储引擎层(InnoDB)
 
 #### undo log 与 MVCC(并发版本控制)
-
 - undo log是 Innodb 引擎专属的日志，是记录每行数据事务执行前的数据。主要作用是用于实现 MVCC 版本控制，undo log 保证事务隔离级别的读已提交和读未提交级别，保证了原子性。(幻读问题依靠锁来实现)
 #### redo log 与 Buffer Pool
 - InnoDB 内部维护了一个缓冲池，用于减少对磁盘数据的直接IO操作，并配合 redo log、内部的 change buffer 来实现异步的落盘，保证程序的高效执行。
