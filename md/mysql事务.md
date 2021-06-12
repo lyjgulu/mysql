@@ -15,6 +15,10 @@
     - 在“读提交”隔离级别下，这个视图是在每个SQL语句开始执行的时候创建的。
     - “读未提交”隔离级别下直接返回记录上的最新值，没有视图概念。
     - 而“串行化”隔离级别下直接用加锁(当前读)的方式来避免并行访问。
+    
+4. 当前读与快照读
+    - 当前读：DML语句语句(X锁，排他锁)，select lock in share mode(S锁，共享锁)
+    - 快照读：MVCC
    
 ### MVCC(undo log部分看mysql的各种log)
 - MVCC适用于读提交与可重复读的隔离级别
@@ -23,6 +27,14 @@
     3. **更新数据都是先读后写的，而这个读，只能读当前的值，称为“当前读”。（current read）**
 - 判断trx_ids方法
 ![transactionId](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/transactionId.png)
+    - up_limit_id：当前已经提交的事务号 + 1，事务号 < up_limit_id ，对于当前Read View都是可见的。理解起来就是创建Read View视图的时候，之前已经提交的事务对于该事务肯定是可见的。
+    - low_limit_id：当前最大的事务号 + 1，事务号 >= low_limit_id，对于当前Read View都是不可见的。理解起来就是在创建Read View视图之后创建的事务对于该事务肯定是不可见的。
+    - trx_ids：为活跃事务id列表，即Read View初始化时当前未提交的事务列表。所以当进行RR读的时候，trx_ids中的事务对于本事务是不可见的（除了自身事务，自身事务对于表的修改对于自己当然是可见的）。理解起来就是创建RV时，将当前活跃事务ID记录下来，后续即使他们提交对于本事务也是不可见的。 
+- MVCC详图
+![transactionId](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/mvcc%2Bundolog.png)
+
+- 解决幻读(详细看mysql的锁机制)
+    - 主要是依靠行级别锁。
 
 - PostgreSQL与MySQL在MVCC实现上的区别(扩展点)
    - MySQL采用MVCC与悲观锁(Next-Key lock)结合。(具体看mysql锁机制)
