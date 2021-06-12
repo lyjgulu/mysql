@@ -14,3 +14,4 @@ changebuffer merge
 
 #### buffer pool flush(内存脏页刷盘)
 1. InnoDB的redo log写满了。这时候系统会停止所有更新操作，把checkpoint往前推进，redo log留出空间可以继续写。
+![flushByRedoLog](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/flushByRedoLog.png)
