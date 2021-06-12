@@ -1,8 +1,11 @@
 ## mysql事务(InnoDB)
 
 ### 事务基本点
-1. 事务的特性
-    - ACID(原子性、一致性、隔离性、持久性)
+1. 事务的特性 ACID
+    - 原子性：主要依靠事务实现。
+    - 一致性：依靠 change buffer 和redo log与 binlog 结合进行崩溃恢复。
+    - 隔离性：MVCC与行级锁
+    - 持久性：Doublewrite Buffer(详细看buffer篇)，redo log fsync()落盘, binlog fsync()落盘
 2. 四种隔离级别
     - 读未提交：脏读，不可重复读，幻读
     - 读已提交：不可重复读，幻读
