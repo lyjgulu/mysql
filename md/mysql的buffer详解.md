@@ -16,7 +16,7 @@
         1. 线性预读，按Buffer Pool中顺序访问的页来预测即将访问的页。
         2. 随机预读，根据Buffer Pool中已有页，不管顺序，预读可能需要的页(比方一个索引在物理上总共15页，Buffer Pool中有14页，剩下一页会采取预读)
 
-- Buffer Pool监视器部分，需要可自查(https://dev.mysql.com/doc/refman/8.0/en/innodb-buffer-pool.html)
+- Buffer Pool监视器部分，需要可自查
 
 - Buffer Pool 配置(主要提高系统性能)
     1. 将Buffer Pool尽可能的调整更大。
@@ -28,7 +28,7 @@
 
 #### buffer pool flush(内存脏页刷盘)(redo log部分看mysql的各种log)
 1. InnoDB的redo log写满了。这时候系统会停止所有更新操作，把checkpoint往前推进，redo log留出空间可以继续写。
-   ![flushByRedoLog](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/flushByRedoLog.png)
+![flushByRedoLog](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/flushByRedoLog.png)
 2. 系统内存不足。当需要新的内存页，而内存不够用的时候，就要淘汰一些数据页，空出内存给别的数据页使用。如果淘汰的是“脏页”，就要先将脏页写到磁盘。刷脏页一定会写盘，就保证了每个数据页有两种状态：
     - 一种是内存里存在，内存里就肯定是正确的结果，直接返回；
     - 另一种是内存里没有数据，就可以肯定数据文件上是正确的结果，读入内存后返回。这样的效率最高。
@@ -52,11 +52,24 @@
     - 对于 IOPS 较高的固态硬盘，可以将 innodb_flush_neighbors 设置为0，缩短刷脏页操作，减少 sql 语句响应时间
 
 ### change buffer
-- 对不在buffer pool中的二级索引数据页进行DML操作，会加载到change buffer修改并写redo log
+- change buffer 存在原因: 执行DML操作时，索引列通常是未排序的，需要大量 I/O 操作更新，一些辅助索引不在 buffer pool 中，使用 change buffer,可以避免大量 I/O 操作。
+- 在 change buffer 中记录的页被加载到 buffer pool 中，主线程会将被更新的页合并，稍后会刷新到磁盘。合并时机：
+    1. 服务器空闲时间
+    2. 服务器缓慢关闭时
+- 优点：
+    1. 有大量DML操作的应用程序适合使用，减少大量 I/O 操作。(读多写少)
+    2. 适合有较多二级索引的表。
+- 缺点：
+    1. 占用 buffer pool 空间。
+    2. 不适合二级索引较少的表
+- 默认占用 buffer pool 25%空间，最高可调到50%
 
+### log buffer
+- 日志缓冲区是保存要写入磁盘上日志文件的数据的内存区域。
 
-
-
+### Doublewrite Buffer(实际是系统表空间的file)
+- buffer pool 脏页刷盘，由于数据库 I/O 最小单位是16k，文件系统 I/O 最小单位为 4Kb，I/O 写入存在page算怀风险
+- 
 
 
 
