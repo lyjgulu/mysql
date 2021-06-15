@@ -67,10 +67,17 @@
 ### log buffer
 - 日志缓冲区是保存要写入磁盘上日志文件的数据的内存区域。
 
-### Doublewrite Buffer(实际是系统表空间的file)
+### Doublewrite Buffer(2MB) 
+- Doublewrite 包括2MB大小的 Doublewrite Buffer 和磁盘共享表空间中2MB大小连续的128个页(2个区)
 - buffer pool 脏页刷盘，由于数据库 I/O 最小单位是16k，文件系统 I/O 最小单位为 4Kb，I/O 写入存在 page 损坏风险，redo log 只能恢复整个脏块，需要 Doublewrite Buffer 辅助
 ![pageDamage](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/pageDamage.png)
 - 工作流程
+![pageDamage](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/DoublewriteProcess.png)
+    1. 当一系列机制触发数据缓冲池中的脏页刷新时，并不直接写入磁盘数据文件中，而是先拷贝至内存中的doublewrite buffer中；
+    2. 接着从两次写缓冲区分两次写入磁盘共享表空间中(连续存储，顺序写，性能很高)，每次写1MB；
+    3. 待第二步完成后，再将 doublewrite buffer 中的脏页数据写入实际的各个表空间文件(离散写)；(脏页数据固化后，即进行标记对应doublewrite数据可覆盖)
+- 优点：保证数据的完整性；缺点：增加 fsync 操作，增加写负载
+
 
 
 

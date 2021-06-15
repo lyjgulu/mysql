@@ -11,6 +11,7 @@
 - InnoDB 内部维护了一个缓冲池，用于减少对磁盘数据的直接IO操作，并配合 redo log、内部的 change buffer 来实现异步的落盘，保证程序的高效执行。
 - redo log 是记录修改操作，防止断电丢失写操作，降低随机写磁盘 IO 消耗（转成顺序写）；Change Buffer 是为了将写操作延迟更新到缓冲池，降低随机读磁盘 IO 的消耗。（不需要频繁从磁盘读数据页)
 - innodb_flush_log_at_trx_commit这个参数设置成1的时候，表示每次事务的redo log都直接持久化到磁盘。这个参数设置成1，这样可以保证MySQL异常重启之后数据不丢失。
+- redo log 中的 LSN 是日志序列号，可以简单理解为日志的记录时机。
 - 例子
     - 执行sql 
     ``` sql
@@ -20,6 +21,8 @@
   ![undo log抽象表示](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/redoAndBuffer.png)
   - 涉及了四个部分：内存、redo log（ib_log_fileX）、 数据表空间（t.ibd）、系统表空间（ibdata1）。
   - 3，4步是将两个动作记入redo log中
+- 组提交 group commit
+
 
 #### bin log(所有引擎都有，二进制)
 - redo log 因为大小固定，所以不能存储过多的数据，它只能用于未更新的数据落盘，而数据操作的备份恢复、以及主从复制是靠 bin log。（如果数据库误删需要还原，那么需要某个时间点的数据备份以及bin log）
