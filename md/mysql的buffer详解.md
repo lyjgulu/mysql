@@ -68,9 +68,9 @@
 - 日志缓冲区是保存要写入磁盘上日志文件的数据的内存区域。
 
 ### Doublewrite Buffer(实际是系统表空间的file)
-- buffer pool 脏页刷盘，由于数据库 I/O 最小单位是16k，文件系统 I/O 最小单位为 4Kb，I/O 写入存在page算怀风险
-- 
-
+- buffer pool 脏页刷盘，由于数据库 I/O 最小单位是16k，文件系统 I/O 最小单位为 4Kb，I/O 写入存在 page 损坏风险，redo log 只能恢复整个脏块，需要 Doublewrite Buffer 辅助
+![pageDamage](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/pageDamage.png)
+- 工作流程
 
 
 
