@@ -22,7 +22,7 @@
   - 涉及了四个部分：内存、redo log（ib_log_fileX）、 数据表空间（t.ibd）、系统表空间（ibdata1）。
   - 3，4步是将两个动作记入redo log中
 - 组提交 group commit
-
+  ![groupCommit](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/groupCommit.png)
 
 #### bin log(所有引擎都有，二进制)
 - redo log 因为大小固定，所以不能存储过多的数据，它只能用于未更新的数据落盘，而数据操作的备份恢复、以及主从复制是靠 bin log。（如果数据库误删需要还原，那么需要某个时间点的数据备份以及bin log）
@@ -47,7 +47,7 @@
 4. undo log 记录的是行记录变化前的数据；redo log 记录的是 sql 的数据页修改逻辑以及 change buffer 的变更；bin log记录操作语句对具体行的操作以及操作前的整行信息（5.7默认）或者sql语句。
 
 5. 单独的 binlog 没有 crash-safe 能力，也就是在异常断电后，之前已经提交但未更新的事务操作到磁盘的操作会丢失，也就是主从复制的一致性无法保障，而 redo log 有 crash-safe 能力，通过与 redo log 的配合实现 "两阶段提交"，就可以让主从库的数据也能保证一致性。(**crash-safe能力是保证即使数据库发生异常重启，之前提交的记录都不会丢失**)
-
+![twoStages](https://raw.githubusercontent.com/lyjgulu/mysql/main/image/twoStages.png)
 
 6. redo log 是物理日志，它记录的是数据页修改逻辑以及 change buffer 的变更，只能在当前存储引擎下使用，而 binlog 是逻辑日志，它记录的是操作语句涉及的每一行修改前后的值，在任何存储引擎下都可以使用。
 
