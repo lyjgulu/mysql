@@ -64,7 +64,7 @@
     2. 不适合二级索引较少的表
 - 默认占用 buffer pool 25%空间，最高可调到50%
 
-### log buffer
+### log buffer(redo log buffer和undo log buffer)
 - 日志缓冲区是保存要写入磁盘上日志文件的数据的内存区域。
 
 ### Doublewrite Buffer(2MB) 
@@ -83,17 +83,7 @@
 
 
 
-
-
-
-  log buffer区包含(redo log buffer和undo log buffer)
-  binlog buffer
-
 changebuffer merge
 从磁盘读入数据页到内存（老版本的数据页）；
 从 change buffer 里找出这个数据页的 change buffer 记录 (可能有多个），依次应用，得到新版数据页；
 写 redo log。这个 redo log 包含了数据的变更和 change buffer 的变更。
-
-
-
-### Doublewrite Buffer
